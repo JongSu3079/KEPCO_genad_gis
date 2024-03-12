@@ -1,0 +1,29 @@
+# mmc run
+# 0 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 192.168.192.50 8104 start_mmc_61850.sh mmc_tempCurr_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_tempCurr.log 2>&1
+*/15 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 192.168.192.50 8104 start_mmc_61850.sh mmc_tempCurr_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_tempCurr.log 2>&1
+*/15 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 192.168.192.50 8103 start_mmc_61850.sh mmc_capacitance_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_capacitance.log 2>&1
+
+# pd process check
+* * * * * /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+
+* * * * * /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+
+* * * * * /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+
+# logrotate 강제실행(매일 23시59분30초에)
+59 23 * * * sleep 30; /usr/sbin/logrotate -f /etc/logrotate.conf
+
+# pd create
+*/15 * * * * /usr/bin/bash /home/HVDC_iec61850/pdCreate.sh
+
+# mmc create
+*/15 * * * * /usr/bin/bash /home/HVDC_iec61850/mmcCreate.sh
+
+# pd realtime create
+*/1 * * * * /usr/bin/bash /home/HVDC_iec61850/pdRealtimeCreate.sh 5
