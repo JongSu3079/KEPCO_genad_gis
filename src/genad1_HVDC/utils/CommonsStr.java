@@ -19,7 +19,8 @@ public class CommonsStr {
 	
 //	public String clientFileName = "start_stat_61850.sh"; // 실행파일 -> iec61850_client_server 
 //	public String clientAliveCommand = "ps -ef | grep iec61850_client_server | grep " + clientPort + " | grep -v grep";
-	public String filePathRoot = "/mnt/ADC_Raw/";
+//	public String filePathRoot = "/mnt/ADC_Raw/";
+	public String filePathRoot = "C:/MU";
 	
 	public String RealTime_SumFile = "/home/KEPCO_iec61850/RealTime_SumFile.sh";
 }

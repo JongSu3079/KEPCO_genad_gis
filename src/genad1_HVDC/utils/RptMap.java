@@ -6,7 +6,7 @@ public class RptMap {
 	private int IEDPORT;
 	private String rptId;
 	
-	private Events events;
+//	private Events events;
 	private Reports reports;
 	private ReportReceiver reportRecv;
 	private RptVar rptVar;
@@ -58,13 +58,13 @@ public class RptMap {
 		IEDPORT = i;
 		rptId = rid;
 		
-		events.setClientUniqueId(UID);
-		events.setRptId(rid);
-		events.setIedIp(ip);
-		events.setIedPort(i);
-		events.setClientIp(clientIp);
-		events.setClientPort(clientPort);
-		events.setReportsName(reportsName);
+//		events.setClientUniqueId(UID);
+//		events.setRptId(rid);
+//		events.setIedIp(ip);
+//		events.setIedPort(i);
+//		events.setClientIp(clientIp);
+//		events.setClientPort(clientPort);
+//		events.setReportsName(reportsName);
 		
 		reports.setClientUniqueId(UID);
 		reports.setRptId(rid);
@@ -78,7 +78,7 @@ public class RptMap {
 		
 		rptVar = new RptVar();
 		
-		events.setRptVar(rptVar);
+//		events.setRptVar(rptVar);
 		reports.setRptVar(rptVar);
 		reportRecv.setRptVar(rptVar);
 	}
@@ -99,9 +99,9 @@ public class RptMap {
 		return reports;
 	}
 	
-	public Events getEvents() {
-		return events;
-	}
+//	public Events getEvents() {
+//		return events;
+//	}
 	
 	public synchronized ReportReceiver getReportRecv() {
 		return reportRecv;
@@ -111,11 +111,11 @@ public class RptMap {
 		return rptVar;
 	}
 	
-	public synchronized void setEvents(Events _events) {
-		if (events != null)
-			events.interrupt();
-		events = _events;
-	}
+//	public synchronized void setEvents(Events _events) {
+//		if (events != null)
+//			events.interrupt();
+//		events = _events;
+//	}
 	
 	public synchronized void setReports(Reports rpt) {
 		if (reports != null)

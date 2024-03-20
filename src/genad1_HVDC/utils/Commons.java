@@ -174,7 +174,7 @@ public class Commons {
 		
 		sendObject.add("request", requestObject);
 
-		System.out.println("--- sendObject(GET_BRCB_VALUES) : " + sendObject.toString());
+		System.out.println("--- sendObject( " + _value + " ) : " + sendObject.toString());
 		
 		bufferedWriter.write(sendObject.toString());
 //			bufferedWriter.newLine();
@@ -182,7 +182,7 @@ public class Commons {
 		
 		String receiveString = bufferedReader.readLine();
 		
-		System.out.println("--- receiveString(GET_BRCB_VALUES) : " + receiveString);
+		System.out.println("--- receiveString( " + _value + " ) : " + receiveString);
 		
 		bufferedWriter.close();
 		bufferedReader.close();
@@ -192,12 +192,196 @@ public class Commons {
 	}
 	
 	
+	// Report
+	public String socketConnection_report(String ip, int port, String clientIp, int clientPort, JsonObject _object, String reportsName, String event_datetime) throws Exception {
+		System.out.println("==================[ socketConnection_report() ]==============================");
+
+		String duration = "30";				//
+		String sKey = "T0N1M2T3E4C5H6"; 	// securekey 만들때 사용할 키
+		
+		Socket _socket = new Socket(clientIp, clientPort);
+		
+		BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(_socket.getOutputStream()));
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(_socket.getInputStream()));
+
+		String securekey = _object.get("client_unique_id").getAsString()
+				+ _object.getAsJsonObject("command").get("commandtype").getAsString() + sKey
+				+ _object.getAsJsonObject("command").get("key").getAsString()
+				+ _object.getAsJsonObject("command").get("value").getAsString();
+		
+		String rptId = _object.getAsJsonObject("command").get("key").getAsString();	
+
+		JsonObject sendObject = new JsonObject();
+		JsonObject requestObject = _object.getAsJsonObject();
+
+		MessageDigest md = MessageDigest.getInstance("MD5");
+		md.update(securekey.getBytes());
+		byte[] msgStr = md.digest();
+
+		StringBuffer sb = new StringBuffer();
+		for (byte byteTmp : msgStr) {
+			sb.append(Integer.toString((byteTmp & 0xff) + 0x100, 16).substring(1));
+		}
+		securekey = sb.toString();
+//		System.out.println("request hexStr : " + securekey);
+
+		requestObject.addProperty("securekey", securekey);
+		requestObject.addProperty("ied_ip", ip);
+		requestObject.addProperty("ied_port", port);
+		requestObject.addProperty("duration", duration);
+
+		sendObject.add("request", requestObject);
+
+		boolean brcb_set_ena = _object.getAsJsonObject("command").get("value").getAsString().equals("BRCB_SET_ENA");
+		boolean urcb_set_ena = _object.getAsJsonObject("command").get("value").getAsString().equals("URCB_SET_ENA");
+		
+		boolean set_rpt_ena = false;
+		if (_object.has("reporting") && _object.getAsJsonObject("reporting").has("report_setRptEna"))
+			set_rpt_ena = _object.getAsJsonObject("reporting").get("report_setRptEna").getAsString().equals("1");
+		
+		boolean reportFlag = ((brcb_set_ena || urcb_set_ena) && set_rpt_ena);
+
+		String receiveString = null;
+		
+		System.out.println("sendObject (" + reportsName + ")  : " + sendObject.toString());
+		bufferedWriter.write(sendObject.toString());
+		bufferedWriter.flush();
+		
+
+		if (reportFlag) {
+			System.out.println("REPORT FLAG (" + reportsName + ") !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			// _socket.setSoTimeout(1000);
+			StringBuilder sbuilder = new StringBuilder();
+			int countsofBlock = 0;
+			while(true) {
+				char readChar = (char) bufferedReader.read();
+				sbuilder.append(readChar);
+				if (readChar == '{') countsofBlock++;
+				else if (readChar == '}') {
+					countsofBlock--;
+					if (countsofBlock == 0) {
+						receiveString = sbuilder.toString();
+						break;
+					}
+				}
+			}
+			
+			System.out.println("[BRCB_SET_ENA] receiveString (" + reportsName + ")  ::: " + receiveString);
+			// for RptEna Check
+			JsonParser jsonParser = new JsonParser();
+			JsonObject jsonObject = (JsonObject)jsonParser.parse(receiveString);
+			String status = jsonObject.get("status").getAsString();
+			
+			if(status.equals("Y")) {
+				
+				// it is acceptable
+				RptMap _rpt = null; // KeyPair<UID, IED_IP, IED_PORT>, Reports 객체 연결
+				boolean match = false;
+
+				for (RptMap iter : rptglobal.getRptMap()) { // 전역 변수에서 매칭되는 rpt가 있는지 확인
+//					System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//					System.out.println("_object.get(\"client_unique_id\").getAsString() : " + _object.get("client_unique_id").getAsString());
+//					System.out.println("rptId : " + rptId);
+					
+					if (iter.matches(_object.get("client_unique_id").getAsString(), ip, port, rptId)) { // 만약 매칭되는 게 있다면, 그 객체를
+						// _rpt에 저장
+						_rpt = iter;
+						match = true;
+						break;
+					}
+				}
+				if (match != true) { // 전역 변수에 없는 조합이라면, _rpt를 생성한 후, 추가 (이 때, Reports 객체는 자동 생성)
+					System.out.println("no match rptmap");
+//					System.out.println("ip : " + ip);
+//					System.out.println("port : " + port);
+//					System.out.println("report Id : " + rptId);
+					
+					_rpt = new RptMap();
+//					_rpt.setup(_object.get("client_unique_id").getAsString(), ip, port, rptId);
+					rptglobal.getRptMap().add(_rpt);
+				}
+				
+//				Events myevent = _rpt.getEvents(); // 
+				Reports myreport = _rpt.getReports(); // 해당 조합의 Report를 받아옴
+				ReportReceiver myrptrecv = _rpt.getReportRecv();
+				
+//				System.out.println("=====================End of Report Process");
+				// end of report process
+				
+//				myevent = new Events();
+				myreport = new Reports();
+				myrptrecv = new ReportReceiver();
+				
+//				_rpt.setEvents(myevent);
+				_rpt.setReports(myreport);
+				_rpt.setReportRecv(myrptrecv);
+				
+				_rpt.setup(_object.get("client_unique_id").getAsString(), ip, port, rptId, clientIp, clientPort, reportsName);
+
+				if (myrptrecv.getSocket() == null || myrptrecv.getSocket().isClosed())
+					myrptrecv.setSocket(_socket);
+//				System.out.println("=====================Socket Setted");
+				if (!myrptrecv.isRunning()) {
+					System.out.println("--- myrptrecv status : " + myrptrecv.getId() + ", " + myrptrecv.getName() + ", "
+							+ myrptrecv.getSocket() + "[" + myrptrecv.getSocket().isConnected() + "]" + "myrptrecv status : "
+							+ myrptrecv.getState());
+					myrptrecv.start();
+					myreport.start();
+//					myevent.start();
+				}
+			}
+			
+		}  else {
+			
+			receiveString = bufferedReader.readLine();
+			System.out.println("[else] 받은 메시지 (" + reportsName + ")  : " + receiveString);
+			boolean reportOff = ((brcb_set_ena || urcb_set_ena) && !set_rpt_ena);
+//					|| _object.getAsJsonObject("command").get("value").getAsString().equals("URCB_SET_ENA"))
+//					&& _object.getAsJsonObject("reporting").get("report_setRptEna").getAsString().equals("0"));
+			if (reportOff) {
+				// report process
+				RptMap _rpt = null; // KeyPair<UID, IED_IP, IED_PORT>, Reports 객체 연결
+				boolean match = false;
+
+				for (RptMap iter : rptglobal.getRptMap()) { // 전역 변수에서 매칭되는 rpt가 있는지 확인
+					if (iter.matches(_object.get("client_unique_id").getAsString(), ip, port, rptId)) { // 만약 매칭되는 게 있다면, 그 객체를
+																									// _rpt에 저장
+						_rpt = iter;
+						match = true;
+						break;
+					}
+				}
+				if (match != true) {
+					 System.out.println("왜 매칭이 안되냐, 기존 거는 있어야지.");
+					bufferedWriter.close();
+					bufferedReader.close();
+					_socket.close();
+					return receiveString;
+				}
+				System.out.println("found rpt object for remove." + rptglobal.getRptMap() + ", target : " + _rpt);
+				ReportReceiver myreport = _rpt.getReportRecv(); // 해당 조합의 ReportRecv를 받아옴
+				// end of report process
+
+				myreport.setstoptag();
+				Thread.sleep(1000);
+				myreport.interrupt();
+				rptglobal.getRptMap().remove(_rpt);
+				System.out.println("rpt object removed." + rptglobal.getRptMap());
+				System.out.println("rptglobal removed rpt object?" + rptglobal.getRptMap().contains(_rpt));
+			}
+			bufferedWriter.close();
+			bufferedReader.close();
+			_socket.close();
+		}
+		
+		return receiveString;
+	}
+	
+	
 	@SuppressWarnings("resource")
 	public String socketConnection(String ip, int port, String clientIp, int clientPort, JsonObject _object, String reportsName, String event_datetime) throws Exception {
 		System.out.println("===============[ Unified Controller Called ]===============");
 
-		String client_ip = "172.30.1.15";// "192.168.219.160"; // "172.30.1.15";	//
-		int client_port = 8030;				//
 		String duration = "30";				//
 		String sKey = "T0N1M2T3E4C5H6"; 	// securekey 만들때 사용할 키
 		
@@ -410,18 +594,18 @@ public class Commons {
 					rptglobal.getRptMap().add(_rpt);
 				}
 				
-				Events myevent = _rpt.getEvents(); // 
+//				Events myevent = _rpt.getEvents(); // 
 				Reports myreport = _rpt.getReports(); // 해당 조합의 Report를 받아옴
 				ReportReceiver myrptrecv = _rpt.getReportRecv();
 				
 //				System.out.println("=====================End of Report Process");
 				// end of report process
 				
-				myevent = new Events();
+//				myevent = new Events();
 				myreport = new Reports();
 				myrptrecv = new ReportReceiver();
 				
-				_rpt.setEvents(myevent);
+//				_rpt.setEvents(myevent);
 				_rpt.setReports(myreport);
 				_rpt.setReportRecv(myrptrecv);
 				
@@ -436,7 +620,7 @@ public class Commons {
 							+ myrptrecv.getState());
 					myrptrecv.start();
 					myreport.start();
-					myevent.start();
+//					myevent.start();
 				}
 			}
 //			} catch (Exception e) {

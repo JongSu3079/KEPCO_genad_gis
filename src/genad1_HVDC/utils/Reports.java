@@ -120,23 +120,23 @@ public class Reports extends Thread {
 //				System.out.println("[REPORT] ****************** rptId ::: " + rptId + "   finalMsg ::: " + finalMsg);
 				
 				// 실시간 데이터(RTTransF)가 아닌경우에만 로그기록
-				if(finalMsg.contains("EvtTransF") || finalMsg.contains("HighResTransF") || finalMsg.contains("TrendTransF")) {
+//				if(finalMsg.contains("EvtTransF") || finalMsg.contains("HighResTransF") || finalMsg.contains("TrendTransF")) {
 					System.out.println("[REPORT] LinkedListQueue() Size : " + sharedRptVar.getCountReportsQueue());
 					System.out.println("[REPORT] ****************** finalMsg ::: " + finalMsg);
-				}
+//				}
 				
 				if (finalMsg.indexOf("IED_RESPONSE_OK") > -1) continue;
 				
 				// 이벤트 레포트가 포함되어 있을경우 Event 큐에 추가
-				if (finalMsg.indexOf("EvtTransF") > -1) {
-					int eventQueueCount = sharedRptVar.getCountEventQueue();
-					System.out.println("[EVENT ADD] EventQueueCount : " + eventQueueCount);
-					
-					// 이벤트큐의 size가 10개 미만이면 저장
-					if(eventQueueCount < 10) {
-						sharedRptVar.addEventQueue(finalMsg);
-					}
-				}
+//				if (finalMsg.indexOf("EvtTransF") > -1) {
+//					int eventQueueCount = sharedRptVar.getCountEventQueue();
+//					System.out.println("[EVENT ADD] EventQueueCount : " + eventQueueCount);
+//					
+//					// 이벤트큐의 size가 10개 미만이면 저장
+//					if(eventQueueCount < 10) {
+//						sharedRptVar.addEventQueue(finalMsg);
+//					}
+//				}
 				
 				try {
 					
@@ -166,9 +166,9 @@ public class Reports extends Thread {
 							// 이벤트 레포트일 경우에 skip (Event 큐에서 파일 다운로드함)
 							// 실시간 레포트일 경우에 skip
 //							if(fileType.equals("EvtTransF") || fileType.equals("RTTransF")) {
-							if(fileType.equals("EvtTransF")) {
-								continue;
-							}
+//							if(fileType.equals("EvtTransF")) {
+//								continue;
+//							}
 							
 							String tempValue = respValue.get(j).getAsString();
 							tempValue = tempValue.split(":::")[1];
@@ -284,45 +284,45 @@ public class Reports extends Thread {
 								
 								if(status.equals("Y")) {
 									
-									if(fileType.equals("HighResTransF")) {
-										
-										System.out.println("==========================================================================");
-										System.out.println("   250M 파일 다운로드 ( " + fileLocation + " )");
-										System.out.println("==========================================================================");
-										
-										if(fileLocation.equals("spdc0")) {
-											HighResTransF_spdc1 = true;
-										} else if(fileLocation.equals("spdc1")) {
-											HighResTransF_spdc2 = true;
-										}
-										
-										// spdc1, spdc2 모두 250M 파일을 다운로드 받으면 다음 Event 파일을 다운로드 받도록 true 입력
-										if(HighResTransF_spdc1 == true && HighResTransF_spdc2 == true) {
-											sharedRptVar.setIsAllowFileDownload(true);
-											System.out.println("----- setIsAllowFileDownload : true (spdc1, spdc2 모두 250M 파일을 다운로드 받음)");
-											HighResTransF_spdc1 = false;
-											HighResTransF_spdc2 = false;
-										}
-										
-										// 250M 파일일 경우에 이름변경
-										fileName = HighResTransF_filename;
-									}
+//									if(fileType.equals("HighResTransF")) {
+//										
+//										System.out.println("==========================================================================");
+//										System.out.println("   250M 파일 다운로드 ( " + fileLocation + " )");
+//										System.out.println("==========================================================================");
+//										
+//										if(fileLocation.equals("spdc0")) {
+//											HighResTransF_spdc1 = true;
+//										} else if(fileLocation.equals("spdc1")) {
+//											HighResTransF_spdc2 = true;
+//										}
+//										
+//										// spdc1, spdc2 모두 250M 파일을 다운로드 받으면 다음 Event 파일을 다운로드 받도록 true 입력
+//										if(HighResTransF_spdc1 == true && HighResTransF_spdc2 == true) {
+//											sharedRptVar.setIsAllowFileDownload(true);
+//											System.out.println("----- setIsAllowFileDownload : true (spdc1, spdc2 모두 250M 파일을 다운로드 받음)");
+//											HighResTransF_spdc1 = false;
+//											HighResTransF_spdc2 = false;
+//										}
+//										
+//										// 250M 파일일 경우에 이름변경
+//										fileName = HighResTransF_filename;
+//									}
 									
 									// 실시간 파일인 경우 ( 실시간 파일은 5초간격으로 파일을 합친 후 complete 폴더로 이동 )
-									if(fileType.equals("RTTransF")) {
-										
-										// 바로전 5초 파일들을 묶기 ( 0~4  or  5~9 )
-										Runtime runtime = Runtime.getRuntime();
-										// ex) /home/HVDC_iec61850/RealTime_SumFile.sh /home/HVDC_iec61850/hvdcData/pd/ 1.241.156.210_102 20211201 00_01_20211201154958.dat
-										String command = commonsStr.RealTime_SumFile + " " + dataUploadDir + " " + iedIp + "_" + iedPort + " " + dataTime_directory + " " + fileName;
-										Process process = runtime.exec(command);
-										
-									} else {
+//									if(fileType.equals("RTTransF")) {
+//										
+//										// 바로전 5초 파일들을 묶기 ( 0~4  or  5~9 )
+//										Runtime runtime = Runtime.getRuntime();
+//										// ex) /home/HVDC_iec61850/RealTime_SumFile.sh /home/HVDC_iec61850/hvdcData/pd/ 1.241.156.210_102 20211201 00_01_20211201154958.dat
+//										String command = commonsStr.RealTime_SumFile + " " + dataUploadDir + " " + iedIp + "_" + iedPort + " " + dataTime_directory + " " + fileName;
+//										Process process = runtime.exec(command);
+//										
+//									} else {
 										// 파일 이동
 										File uploadFile = new File(uploadDir + fileName);		//	/home/hvdcData/pd/upload/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
 										File completeFile = new File(completeDir + fileName);	//	/home/hvdcData/pd/complete/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
 										uploadFile.renameTo(completeFile);
-									}
+//									}
 									
 								} else {
 									System.out.println("FILE_GET message (" + reportsName + ")  : " + message);
