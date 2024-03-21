@@ -179,51 +179,51 @@ public class Reports extends Thread {
 //							String dateTime = timeArray[0];
 							
 							// Unix타임 변환
-							long unixTime = Long.parseLong(valueArray[0]);
-							Date date = new Date(unixTime*1000L);
-							SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-							SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
-							sdf.setTimeZone(TimeZone.getTimeZone("GMT+9"));
-							sdf2.setTimeZone(TimeZone.getTimeZone("GMT+9"));
-							
-							String dateTime = sdf.format(date);
-							String dataTime_directory = sdf2.format(date);
-							
-							String fileName = "";
-							if(fileLocation.equals("spdc1")) {
-								fileName = "00";
-								fileLocation = "spdc0";
-								datatype_comment = "61338";
-							} else {
-								fileName = "01";
-								fileLocation = "spdc1";
-								datatype_comment = "61440";
-							}
-							
-							// RTTransF:실시간파일, EvtTransF:이벤트파일, HighResTransF:250M파일, TrendTransF:트랜드파일
-							if(fileType.equals("RTTransF")) {
-								fileName += "_01_" + dateTime + ".dat";
-							} else if(fileType.equals("EvtTransF")) {
-								fileName += "_02_" + dateTime + ".dat";
-							} else if(fileType.equals("HighResTransF")) {
-								
-								// Event파일과 250M파일의 이름을 동일하게 생성하기위해 사용
-								event_datetime = sharedRptVar.getEvent_datetime();
-								// 폴더
-								dataTime_directory = event_datetime.substring(0, 8);
-								
-								// 로컬에 저장하기위해서 사용
-								HighResTransF_filename = fileName + "_03_" + event_datetime + ".dat";
-								// IED에서 가져오기위해서 사용
-								fileName += "_03_" + dateTime + ".dat";
-								
-							} else {
-								fileName += "_04_" + dateTime + ".dat";
-							}
-//							System.out.println("fileName ::: " + fileName);
-							
-							String reasonStr = reasons.get(j).getAsString();
-							String reason = reasonStr.split("[:]")[1];
+//							long unixTime = Long.parseLong(valueArray[0]);
+//							Date date = new Date(unixTime*1000L);
+//							SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+//							SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
+//							sdf.setTimeZone(TimeZone.getTimeZone("GMT+9"));
+//							sdf2.setTimeZone(TimeZone.getTimeZone("GMT+9"));
+//							
+//							String dateTime = sdf.format(date);
+//							String dataTime_directory = sdf2.format(date);
+//							
+//							String fileName = "";
+//							if(fileLocation.equals("spdc1")) {
+//								fileName = "00";
+//								fileLocation = "spdc0";
+//								datatype_comment = "61338";
+//							} else {
+//								fileName = "01";
+//								fileLocation = "spdc1";
+//								datatype_comment = "61440";
+//							}
+//							
+//							// RTTransF:실시간파일, EvtTransF:이벤트파일, HighResTransF:250M파일, TrendTransF:트랜드파일
+//							if(fileType.equals("RTTransF")) {
+//								fileName += "_01_" + dateTime + ".dat";
+//							} else if(fileType.equals("EvtTransF")) {
+//								fileName += "_02_" + dateTime + ".dat";
+//							} else if(fileType.equals("HighResTransF")) {
+//								
+//								// Event파일과 250M파일의 이름을 동일하게 생성하기위해 사용
+//								event_datetime = sharedRptVar.getEvent_datetime();
+//								// 폴더
+//								dataTime_directory = event_datetime.substring(0, 8);
+//								
+//								// 로컬에 저장하기위해서 사용
+//								HighResTransF_filename = fileName + "_03_" + event_datetime + ".dat";
+//								// IED에서 가져오기위해서 사용
+//								fileName += "_03_" + dateTime + ".dat";
+//								
+//							} else {
+//								fileName += "_04_" + dateTime + ".dat";
+//							}
+////							System.out.println("fileName ::: " + fileName);
+//							
+//							String reasonStr = reasons.get(j).getAsString();
+//							String reason = reasonStr.split("[:]")[1];
 							
 							// 폴더 생성
 //							String uploadDir = dataUploadDir + "upload/" + iedIp + "/" + reportsName + "/" + fileLocation + "/";		//	/home/hvdcData/genad/upload/121.139.36.94/SPDCStat_brcb01/spdc0/
@@ -231,19 +231,19 @@ public class Reports extends Thread {
 //							
 							// 폴더 생성
 							// /home/hvdcData/pd/upload/121.139.36.94_102/RTTransF/20210827/
-							String uploadDir = dataUploadDir + "upload/" + iedIp + "_" + iedPort + "/" + fileType + "/" + dataTime_directory + "/";	
-							// /home/hvdcData/pd/complete/121.139.36.94_102/RTTransF/20210827/
-							String completeDir = dataUploadDir + "complete/" + iedIp + "_" + iedPort + "/" + fileType + "/" + dataTime_directory + "/";
-							
-							File uploadDirFile = new File(uploadDir);
-							File completeDirFile = new File(completeDir);
-							
-							if(!uploadDirFile.exists()) {
-								uploadDirFile.mkdirs();
-							}
-							if(!completeDirFile.exists()) {
-								completeDirFile.mkdirs();
-							}
+//							String uploadDir = dataUploadDir + "upload/" + iedIp + "_" + iedPort + "/" + fileType + "/" + dataTime_directory + "/";	
+//							// /home/hvdcData/pd/complete/121.139.36.94_102/RTTransF/20210827/
+//							String completeDir = dataUploadDir + "complete/" + iedIp + "_" + iedPort + "/" + fileType + "/" + dataTime_directory + "/";
+//							
+//							File uploadDirFile = new File(uploadDir);
+//							File completeDirFile = new File(completeDir);
+//							
+//							if(!uploadDirFile.exists()) {
+//								uploadDirFile.mkdirs();
+//							}
+//							if(!completeDirFile.exists()) {
+//								completeDirFile.mkdirs();
+//							}
 							
 							
 							// request block
@@ -258,7 +258,9 @@ public class Reports extends Thread {
 							commandObj.addProperty("key", "");
 							commandObj.addProperty("value", "FILE_GET");
 							
-							String fileName_fullpath = filePathRoot + fileLocation + "/" + fileName;
+//							String fileName_fullpath = filePathRoot + fileLocation + "/" + fileName;
+							String fileName_fullpath = "C:\\MU\\G101_01\\EVENT\\2024\\03\\20\\K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat";
+							String uploadDir = "/home/KEPCO_iec61850/upload/gis/";
 							
 							// control block
 							JsonObject fileObj = new JsonObject();
@@ -319,9 +321,9 @@ public class Reports extends Thread {
 //										
 //									} else {
 										// 파일 이동
-										File uploadFile = new File(uploadDir + fileName);		//	/home/hvdcData/pd/upload/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
-										File completeFile = new File(completeDir + fileName);	//	/home/hvdcData/pd/complete/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
-										uploadFile.renameTo(completeFile);
+//										File uploadFile = new File(uploadDir + fileName);		//	/home/hvdcData/pd/upload/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
+//										File completeFile = new File(completeDir + fileName);	//	/home/hvdcData/pd/complete/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
+//										uploadFile.renameTo(completeFile);
 //									}
 									
 								} else {
