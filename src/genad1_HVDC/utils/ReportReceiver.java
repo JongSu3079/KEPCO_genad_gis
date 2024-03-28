@@ -138,7 +138,10 @@ public class ReportReceiver extends Thread {
 							// _reports.add(finalMsg);							
 //							sharedRptVar.addReport(finalMsg);
 							
-							sharedRptVar.addReportQueue(finalMsg);
+							// EvtTransF, TrendTransF, RTTransF
+							if(finalMsg.contains("EvtTransF") || finalMsg.contains("TrendTransF") || finalMsg.contains("RTTransF")) {
+								sharedRptVar.addReportQueue(finalMsg);
+							}
 							
 //							System.out.println("rpt added to sharedRptVar Report");
 //							System.out.println("----------- finalMsg (" + startidxforsub + ") (rptId : " + rptId + ") --------------------");

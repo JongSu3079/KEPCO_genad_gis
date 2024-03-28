@@ -1,5 +1,7 @@
 package genad1_HVDC.utils;
 
+import java.util.Map;
+
 public class RptMap {
 	private String UID;
 	private String IEDIP;
@@ -52,7 +54,7 @@ public class RptMap {
 		// rptVar = new RptVar();
 	}
 	
-	public synchronized void setup(String uid, String ip, int i, String rid, String clientIp, int clientPort, String reportsName) {
+	public synchronized void setup(String uid, String ip, int i, String rid, String clientIp, int clientPort, String reportsName, Map _eeNameMap) {
 		UID = uid;
 		IEDIP = ip;
 		IEDPORT = i;
@@ -76,7 +78,7 @@ public class RptMap {
 		
 		reportRecv.setRptId(rid);
 		
-		rptVar = new RptVar();
+		rptVar = new RptVar(_eeNameMap);
 		
 //		events.setRptVar(rptVar);
 		reports.setRptVar(rptVar);

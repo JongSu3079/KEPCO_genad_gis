@@ -15,7 +15,8 @@ public class CommonsStr {
 //	public String clientPort = "8201";
 	public String clientFilePath = "/home/KEPCO_iec61850/iec61850_client_server/";
 //	public String IedConfigFile = "/home/KEPCO_iec61850/iec61850_client_server/genad_stat_ied.txt";
-	public String dataUploadDir = "/home/KEPCO_iec61850/kepcoData/gis/pd";
+//	public String dataUploadDir = "/home/KEPCO_iec61850/kepcoData/gis/pd";
+	public String kepcoHome = "/home/KEPCO_iec61850/";
 	
 //	public String clientFileName = "start_stat_61850.sh"; // 실행파일 -> iec61850_client_server 
 //	public String clientAliveCommand = "ps -ef | grep iec61850_client_server | grep " + clientPort + " | grep -v grep";

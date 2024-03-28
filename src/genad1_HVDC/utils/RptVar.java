@@ -1,6 +1,8 @@
 package genad1_HVDC.utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import genad1_HVDC.queue.LinkedListQueue;
 
@@ -23,13 +25,19 @@ public class RptVar {
 	// Event파일과 250M파일의 이름을 동일하게 생성하기위해 사용
 	private String event_datetime = "";
 	
+	// EEName
+	// e.g) key : GNDMUGLU01/SCBR1.EEName.location, EEName : K_J9999_GLU101_CH01_CBOP_9999001
+	Map eenameMap;
+	
 
-	public RptVar() {
+	public RptVar(Map _eenameMap) {
 		_reports = new ArrayList<String>();
 		queue = new LinkedListQueue<>();
 		eventQueue = new LinkedListQueue<>();
 		cursor = 0;
 		recvFin = false;
+		
+		eenameMap = _eenameMap;
 	}
 	
 	public String getEvent_datetime() {
@@ -147,6 +155,10 @@ public class RptVar {
 	}
 	public synchronized String getOneEventQueueNotDelete() {
 		return eventQueue.peek();
+	}
+
+	public Map getEenameMap() {
+		return eenameMap;
 	}
 
 }

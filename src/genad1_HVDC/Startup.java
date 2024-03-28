@@ -99,226 +99,129 @@ public class Startup {
 			String readLine = null;
 			while((readLine = br2.readLine()) != null) {
 				
+				Map eenameMap = new HashMap();
+				
+				// e.g) 192.168.10.101,102,03,GNDMUGLU01
+				//      IED_ip, IED_port, report_name_postfix, logical_device??
 				String[] iedArray = readLine.split(",");
 				String ied_ip = iedArray[0];
 				String ied_port = iedArray[1];
-				String[] reportsArray = iedArray[2].split(":");
+//				String[] reportsArray = iedArray[2].split(":");
+				String postfix = iedArray[2];
+				String ld = iedArray[3];
 				
+//				Thread.sleep(2000);
+				
+				String clientUniqueId = commons.generateConnectionid("jgeosdushs");
+				
+				System.out.println("==============[ IED Server 연결  ]===========================");
+				System.out.println("   IED ip : " + ied_ip);
+				System.out.println("   IED port : " + ied_port);
+				System.out.println("   Report Name postfix : " + postfix);
+				System.out.println("   LD : " + ld);
+				System.out.println("===========================================================");
+				
+				System.out.println("iedName : " + iedName);
+				System.out.println("clientIp : " + clientIp);
+				System.out.println("clientPort : " + clientPort);
+				System.out.println("ap_title : " + ap_title);
+				System.out.println("ae_qualifier : " + ae_qualifier);
+				System.out.println("pdusize : " + pdusize);
+				System.out.println("psel : " + psel);
+				System.out.println("ssel : " + ssel);
+				System.out.println("tsel : " + tsel);
 
-				for(int a = 0; a < reportsArray.length; a++) {
-//					Thread.sleep(2000);
-					
-					String reportsName = reportsArray[a];
-					String clientUniqueId = commons.generateConnectionid("jgeosdushs");
-					
-					System.out.println("==============[ IED Server 연결 : " + reportsName + " ]=======================");
-					System.out.println("   IED ip : " + ied_ip);
-					System.out.println("   IED port : " + ied_port);
-					System.out.println("===========================================================");
-					
-					System.out.println("iedName : " + iedName);
-					System.out.println("clientIp : " + clientIp);
-					System.out.println("clientPort : " + clientPort);
-					System.out.println("ap_title : " + ap_title);
-					System.out.println("ae_qualifier : " + ae_qualifier);
-					System.out.println("pdusize : " + pdusize);
-					System.out.println("psel : " + psel);
-					System.out.println("ssel : " + ssel);
-					System.out.println("tsel : " + tsel);
+				String message = "";
+				String from = "";
+				
+				String commandtype = "command";
+				String datatype = "";
+				String datatype_comment = "";
+				String datatype_fc = "";
+				String key = "";
+				String value = "associate";
+				
+				String receiveString = "";
+				
+				// IED Server 연결 실패시 5번 다시시도
+				for(int i = 1; i < 6; i++) {
+					// 소켓통신
+					receiveString = commons.socketConnection2(authMap, ied_ip, Integer.parseInt(ied_port), clientIp, Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key, value, clientUniqueId);
 
-					String message = "";
-					String from = "";
-					
-					String commandtype = "command";
-					String datatype = "";
-					String datatype_comment = "";
-					String datatype_fc = "";
-					String key = "";
-					String value = "associate";
-					
-					String receiveString = "";
-					
-					// IED Server 연결 실패시 5번 다시시도
-					for(int i = 1; i < 6; i++) {
-						// 소켓통신
-						receiveString = commons.socketConnection2(authMap, ied_ip, Integer.parseInt(ied_port), clientIp, Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key, value, clientUniqueId);
-
-						if(receiveString == null || receiveString.equals("")) {
-							System.out.println(i + " 번째 IED Connection 실패! (receiveString is empty)");
-							continue;
-						} else {
-							JsonParser jsonParser = new JsonParser();
-							JsonObject jsonObject = (JsonObject)jsonParser.parse(receiveString);
-							String status = jsonObject.get("status").getAsString();
-							message = jsonObject.get("message").getAsString();
-							from = "[ associate ]";
-							
-							if(!status.equals("Y")) {
-								System.out.println(i + " 번째 IED Connection 실패!! (" + message + ") (" + reportsName + ")" );
-								continue;
-							} else {
-								System.out.println(i + " 번째 IED Connection 성공!!!!! (" + reportsName + ") ");
-								break;
-							}
-						}
-					}
-					
-					if(receiveString != null && !receiveString.equals("")) {
-						
+					if(receiveString == null || receiveString.equals("")) {
+						System.out.println(i + " 번째 IED Connection 실패! (receiveString is empty)");
+						continue;
+					} else {
 						JsonParser jsonParser = new JsonParser();
 						JsonObject jsonObject = (JsonObject)jsonParser.parse(receiveString);
 						String status = jsonObject.get("status").getAsString();
-						String responseSecurekey = jsonObject.get("securekey").getAsString();
 						message = jsonObject.get("message").getAsString();
 						from = "[ associate ]";
 						
-						System.out.println("[ associate ] status : " + status + ", message : " + message);
+						if(!status.equals("Y")) {
+							System.out.println(i + " 번째 IED Connection 실패!! (" + message + ")" );
+							continue;
+						} else {
+							System.out.println(i + " 번째 IED Connection 성공!!!!!");
+							break;
+						}
+					}
+				}
+				
+				if(receiveString != null && !receiveString.equals("")) {
+					
+					JsonParser jsonParser = new JsonParser();
+					JsonObject jsonObject = (JsonObject)jsonParser.parse(receiveString);
+					String status = jsonObject.get("status").getAsString();
+					String responseSecurekey = jsonObject.get("securekey").getAsString();
+					message = jsonObject.get("message").getAsString();
+					from = "[ associate ]";
+					
+					System.out.println("[ associate ] status : " + status + ", message : " + message);
+					
+					if(status.equals("Y")) {
 						
-						if(status.equals("Y")) {
+						commandtype = "select";
+						datatype_fc = "";
+						datatype = "";
+						datatype_comment = "";
+						key = ld;
+						value = "LD";
+						
+						System.out.println("==========================================================================");
+						System.out.println("   key : " + key + " , value : " + value);
+						System.out.println("==========================================================================");
+						
+						receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp, Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key, value, clientUniqueId);
+						List resList = new ArrayList();
+						int resListSize = 0;
+						
+						if(receiveString != null && !receiveString.equals("")) {
 							
-							String ld = "GNDMUGLU01";
+							jsonParser = new JsonParser();
+							jsonObject = (JsonObject)jsonParser.parse(receiveString);
+							status = jsonObject.get("status").getAsString();
+							responseSecurekey = jsonObject.get("securekey").getAsString();
+							message = jsonObject.get("message").getAsString();
 							
-							commandtype = "select";
-							datatype_fc = "";
-							datatype = "";
-							datatype_comment = "";
-							key = ld;
-							value = "LD";
+							System.out.println("message : " + message);
+							System.out.println("status : " + status);
 							
-							System.out.println("==========================================================================");
-							System.out.println("   key : " + key + " , value : " + value);
-							System.out.println("==========================================================================");
-							
-							receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp, Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key, value, clientUniqueId);
-							List resList = new ArrayList();
-							int resListSize = 0;
-							
-							if(receiveString != null && !receiveString.equals("")) {
+							if(status.equals("Y")) {
+								JsonObject jsonObject2 = jsonObject.get("response").getAsJsonObject();
+								JsonArray jsonArray = jsonObject2.get(key).getAsJsonArray();
 								
-								jsonParser = new JsonParser();
-								jsonObject = (JsonObject)jsonParser.parse(receiveString);
-								status = jsonObject.get("status").getAsString();
-								responseSecurekey = jsonObject.get("securekey").getAsString();
-								message = jsonObject.get("message").getAsString();
-								
-								System.out.println("message : " + message);
-								System.out.println("status : " + status);
-								
-								if(status.equals("Y")) {
-									JsonObject jsonObject2 = jsonObject.get("response").getAsJsonObject();
-									JsonArray jsonArray = jsonObject2.get(key).getAsJsonArray();
+								for(int k = 0; k < jsonArray.size(); k++) {
 									
-									for(int k = 0; k < jsonArray.size(); k++) {
-										
-										String tempLn = jsonArray.get(k).getAsString();
-										if(!tempLn.equals("LLN0") && !tempLn.equals("LPHD1")) {
-											
-											commandtype = "select";
-											datatype_fc = "DC";
-											datatype = "";
-											datatype_comment = "";
-											key = ld + "/" + tempLn + ".EEName.location";
-											value = "DV";
-											
-											System.out.println("==========================================================================");
-											System.out.println("   key : " + key + " , value : " + value);
-											System.out.println("==========================================================================");
-											
-											// 소켓통신
-											receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp,
-													Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key,
-													value, clientUniqueId);
-											
-											if (receiveString != null && !receiveString.equals("")) {
-												
-												jsonParser = new JsonParser();
-												jsonObject = (JsonObject) jsonParser.parse(receiveString);
-												status = jsonObject.get("status").getAsString();
-												responseSecurekey = jsonObject.get("securekey").getAsString();
-												message = jsonObject.get("message").getAsString();
-												
-												System.out.println("message : " + message);
-												System.out.println("status : " + status);
-													
-												if (status.equals("Y")) {
-													
-													jsonObject2 = jsonObject.get("response").getAsJsonObject();
-													
-													String resValue = jsonObject2.get(key).getAsString();
-													System.out.println("key : " + key + ", EEName : " + resValue);
-												}
-											}
-										}
-									}
-								}
-							}
-							
-							String ln = "LLN0";
-							String tempKey = ld + "/" + ln;
-							
-							commandtype = "select";
-							datatype_fc = "";
-							datatype = "";
-							datatype_comment = "";
-							key = tempKey;
-							value = "DATA_SET";
-//							value = "DATA_SET_FCDA_LIST";
-							
-							System.out.println("==========================================================================");
-							System.out.println("   key : " + key + " , value : " + value);
-							System.out.println("==========================================================================");
-							
-							// 소켓통신
-							receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp,
-									Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key,
-									value, clientUniqueId);
-							
-							tempKey = ld + "/" + ln;
-							
-							commandtype = "select";
-							datatype_fc = "";
-							datatype = "";
-							datatype_comment = "";
-							key = tempKey;
-							value = "BRCB";
-							
-							System.out.println("==========================================================================");
-							System.out.println("   key : " + key + " , value : " + value);
-							System.out.println("==========================================================================");
-							
-							// 소켓통신
-							receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp,
-									Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key,
-									value, clientUniqueId);
-							
-							if(receiveString != null && !receiveString.equals("")) {
-								
-								jsonParser = new JsonParser();
-								jsonObject = (JsonObject)jsonParser.parse(receiveString);
-								status = jsonObject.get("status").getAsString();
-								responseSecurekey = jsonObject.get("securekey").getAsString();
-								message = jsonObject.get("message").getAsString();
-								
-								System.out.println("message : " + message);
-								System.out.println("status : " + status);
-								
-								if(status.equals("Y")) {
-									JsonObject jsonObject2 = jsonObject.get("response").getAsJsonObject();
-									JsonArray jsonArray = jsonObject2.get(key).getAsJsonArray();
-									
-									for(int k = 0; k < jsonArray.size(); k++) {
-										
-//										reportsName = "rcb_SCBR_Diagnostic01";
-										reportsName = jsonArray.get(k).getAsString();
-										tempKey = ld + "/" + ln + "." + reportsName;
+									String tempLn = jsonArray.get(k).getAsString();
+									if(!tempLn.equals("LLN0") && !tempLn.equals("LPHD1")) {
 										
 										commandtype = "select";
-										datatype_fc = "BR";
+										datatype_fc = "DC";
 										datatype = "";
 										datatype_comment = "";
-										key = tempKey;
-										value = "GET_BRCB_VALUES";
-										String[] valueArray = {};
+										key = ld + "/" + tempLn + ".EEName.location";
+										value = "DV";
 										
 										System.out.println("==========================================================================");
 										System.out.println("   key : " + key + " , value : " + value);
@@ -336,109 +239,286 @@ public class Startup {
 											status = jsonObject.get("status").getAsString();
 											responseSecurekey = jsonObject.get("securekey").getAsString();
 											message = jsonObject.get("message").getAsString();
-											from = "[ getBRCBValues - " + key + " ]";
 											
 											System.out.println("message : " + message);
 											System.out.println("status : " + status);
-											
+												
 											if (status.equals("Y")) {
 												
-												JsonObject jsonObject3 = jsonObject.get("response").getAsJsonObject();
-												String resValue = jsonObject3.get(key).getAsString();
+												jsonObject2 = jsonObject.get("response").getAsJsonObject();
 												
-												// {HVDC/LLN0$SPDCStat_brcb,false,TEMPLATE_IED_TEST/LLN0$HVDC_SPDC_Stat,1,0111111110,1000,160,010000,5000,false,false,9a5b13619e450a00,20210819014109.039Z}
-												// {GNDMUGLU01/LLN0.BR.SPDC_Status,false,GNDMUGLU01/LLN0$SPDC_Status,1,0111110110,0,0,010001,5000,false,false,18b8f36505000000,20240315025900.948Z}
-												System.out.println("resValue ---> " + resValue);
+												String resValue = jsonObject2.get(key).getAsString();
+												System.out.println("key : " + key + ", EEName : " + resValue);
 												
-												String tempValue = resValue.replace("{", "");
-												tempValue = tempValue.replace("}", "");
-												valueArray = tempValue.split(",", -1);
-												int valueLength = valueArray.length;
-												System.out.println("resValue Length ---> " + valueLength);
-												
-												String reportId = valueArray[0];	// HVDC/LLN0$SPDCStat_brcb
-												String dataSet = valueArray[2]; 	// TEMPLATE_IED_TEST/LLN0$HVDC_SPDC_Stat
-												
-												System.out.println("reportId : " + reportId);
-												System.out.println("dataSet : " + dataSet);
-												
-												value = "BRCB_SET_ENA";
-												String report_rcb_name = ld + "/" + ln + "." + datatype_fc + "." + reportsName;
-												String report_rcb_receiver = ld + "/" + ln + "." + datatype_fc + "." + reportsName;
-												
-												System.out.println("==========================================================================");
-												System.out.println("   key : " + key + " , value : " + value);
-												System.out.println("==========================================================================");
-												
-//												clientUniqueId = commons.generateConnectionid("jgeosdushs");
-												
-												// request block
-												JsonObject requestObject2 = new JsonObject();
-												
-												// command block
-												JsonObject commandObj2 = new JsonObject();
-												commandObj2.addProperty("commandtype", "update");
-												commandObj2.addProperty("datatype_fc", "");
-												commandObj2.addProperty("datatype", "");
-												commandObj2.addProperty("datatype_comment", "");
-												commandObj2.addProperty("key", key);
-												commandObj2.addProperty("value", value);
-												
-												// reporting block
-												JsonObject reportingObj2 = new JsonObject();
-												reportingObj2.addProperty("report_dataset_name", dataSet.replace("$", "."));
-												reportingObj2.addProperty("report_rpt_id", reportId);
-												reportingObj2.addProperty("report_rcb_name", report_rcb_name);
-												reportingObj2.addProperty("report_rcb_receiver", report_rcb_receiver);
-												
-												reportingObj2.addProperty("report_setDataSetReference", dataSet);
-												reportingObj2.addProperty("report_setRptEna", "1");
-												reportingObj2.addProperty("report_setConfRev", "@@@@");
-												reportingObj2.addProperty("report_setDataSet", dataSet);
-												reportingObj2.addProperty("report_setBufTm", "@@@@");
-												reportingObj2.addProperty("report_setPurgeBuf", "@@@@");
-												reportingObj2.addProperty("report_setIntgPd", "@@@@");
-												reportingObj2.addProperty("report_setEntryID", "@@@@");
-												
-												reportingObj2.addProperty("report_optflds_bitsize", "@@@@");
-												reportingObj2.addProperty("report_optflds_sequence_number", "@@@@");
-												reportingObj2.addProperty("report_optflds_report_time_stamp", "@@@@");
-												reportingObj2.addProperty("report_optflds_reason_for_inclusion", "@@@@");
-												reportingObj2.addProperty("report_optflds_data_set_name", "@@@@");
-												reportingObj2.addProperty("report_optflds_data_reference", "@@@@");
-												reportingObj2.addProperty("report_optflds_buffer_overflow", "@@@@");
-												reportingObj2.addProperty("report_optflds_entryID", "@@@@");
-												reportingObj2.addProperty("report_optflds_conf_version", "@@@@");
-												reportingObj2.addProperty("report_optflds_segmnt", "@@@@");
-												
-												reportingObj2.addProperty("report_trgops_bitsize", "@@@@");
-												reportingObj2.addProperty("report_trgops_dchg", "@@@@");
-												reportingObj2.addProperty("report_trgops_dupd", "@@@@");
-												reportingObj2.addProperty("report_trgops_qchg", "@@@@");
-												reportingObj2.addProperty("report_trgops_intg", "@@@@");
-												reportingObj2.addProperty("report_trgops_gi", "@@@@");
-												
-												requestObject2.add("command", commandObj2);
-												requestObject2.add("reporting", reportingObj2);
-												requestObject2.addProperty("client_unique_id", clientUniqueId);
-												
-												receiveString = "";
-//												receiveString = commons.socketConnection_report(ied_ip, Integer.parseInt(ied_port), clientIp, Integer.parseInt(clientPort), requestObject2, reportsName, "");
+												// e.g) key : GNDMUGLU01/SCBR1.EEName.location, EEName : K_J9999_GLU101_CH01_CBOP_9999001
+												eenameMap.put(key, resValue);
 											}
 										}
 									}
 								}
 							}
-							
-							
-							
-						} else {
-							System.out.println("associate message (" + reportsName + ")  : " + message);
 						}
 						
+						String ln = "LLN0";						
+						
+						commandtype = "select";
+						datatype_fc = "";
+						datatype = "";
+						datatype_comment = "";
+						key = ld + "/" + ln;
+						value = "BRCB";
+						
+						System.out.println("==========================================================================");
+						System.out.println("   key : " + key + " , value : " + value);
+						System.out.println("==========================================================================");
+						
+						// 소켓통신
+						receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp,
+								Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key,
+								value, clientUniqueId);
+						
+						if(receiveString != null && !receiveString.equals("")) {
+							
+							jsonParser = new JsonParser();
+							jsonObject = (JsonObject)jsonParser.parse(receiveString);
+							status = jsonObject.get("status").getAsString();
+							responseSecurekey = jsonObject.get("securekey").getAsString();
+							message = jsonObject.get("message").getAsString();
+							
+							System.out.println("message : " + message);
+							System.out.println("status : " + status);
+							
+							if(status.equals("Y")) {
+								JsonObject jsonObject2 = jsonObject.get("response").getAsJsonObject();
+								JsonArray jsonArray = jsonObject2.get(key).getAsJsonArray();
+								
+//								for(int k = 0; k < 1; k++) {
+								for(int k = 0; k < jsonArray.size(); k++) {
+									
+//										reportsName = "rcb_SCBR_Diagnostic01";
+									String reportsName = jsonArray.get(k).getAsString();
+									
+									// posotfix로 끝나는 reportsName
+									if(reportsName.endsWith(postfix)) {
+										
+										String report_rcb_name = "";
+										String report_rcb_receiver = "";
+										
+//										datatype_fc = "BR";
+//										key = ld + "/" + ln + "." + reportsName;
+//										value = "BRCB_SET_VALUES";
+//										String report_rcb_name = ld + "/" + ln + "." + datatype_fc + "." + reportsName;
+//										String report_rcb_receiver = ld + "/" + ln + "." + datatype_fc + "." + reportsName;
+//										
+//										System.out.println("==========================================================================");
+//										System.out.println("   key : " + key + " , value : " + value);
+//										System.out.println("==========================================================================");
+//										
+////										clientUniqueId = commons.generateConnectionid("jgeosdushs");
+//
+//										// request block
+//										JsonObject requestObject = new JsonObject();
+//										
+//										// command block
+//										JsonObject commandObj = new JsonObject();
+//										commandObj.addProperty("commandtype", "update"); // "select", "update"
+//										commandObj.addProperty("datatype_fc", datatype_fc);
+//										commandObj.addProperty("datatype", "");
+//										commandObj.addProperty("datatype_comment", "");
+//										commandObj.addProperty("key", key);
+//										commandObj.addProperty("value", value);
+//										
+//										// reporting block
+//										JsonObject reportingObj = new JsonObject();
+//										reportingObj.addProperty("report_dataset_name", "@@@@");
+//										reportingObj.addProperty("report_rpt_id", "@@@@");
+//										reportingObj.addProperty("report_rcb_name", report_rcb_name);
+//										reportingObj.addProperty("report_rcb_receiver", report_rcb_receiver);
+//										
+//										reportingObj.addProperty("report_setDataSetReference", "@@@@");
+//										reportingObj.addProperty("report_setRptEna", "@@@@");
+//										reportingObj.addProperty("report_setConfRev", "@@@@");
+//										reportingObj.addProperty("report_setDataSet", "@@@@");
+//										reportingObj.addProperty("report_setBufTm", "@@@@");
+//										reportingObj.addProperty("report_setPurgeBuf", "@@@@");
+//										reportingObj.addProperty("report_setIntgPd", "@@@@");
+//										reportingObj.addProperty("report_setEntryID", "@@@@");
+//										
+//										reportingObj.addProperty("report_setResv", "@@@@");
+//										reportingObj.addProperty("report_setResvTms", "@@@@");
+//										
+//										reportingObj.addProperty("report_optflds_bitsize", "@@@@");
+//										reportingObj.addProperty("report_optflds_sequence_number", "@@@@");
+//										reportingObj.addProperty("report_optflds_report_time_stamp", "@@@@");
+//										reportingObj.addProperty("report_optflds_reason_for_inclusion", "@@@@");
+//										reportingObj.addProperty("report_optflds_data_set_name", "@@@@");
+//										reportingObj.addProperty("report_optflds_data_reference", "@@@@");
+//										reportingObj.addProperty("report_optflds_buffer_overflow", "@@@@");
+//										reportingObj.addProperty("report_optflds_entryID", "@@@@");
+//										reportingObj.addProperty("report_optflds_conf_version", "@@@@");
+//										reportingObj.addProperty("report_optflds_segmnt", "@@@@");
+//										
+//										reportingObj.addProperty("report_trgops_bitsize", "6");
+//										reportingObj.addProperty("report_trgops_dchg", "1"); // 제나드에서는 Data change 만 지원함
+//										reportingObj.addProperty("report_trgops_dupd", "0");
+//										reportingObj.addProperty("report_trgops_qchg", "0");
+//										reportingObj.addProperty("report_trgops_intg", "0"); // 
+//										reportingObj.addProperty("report_trgops_gi", "0");
+//										
+//										requestObject.add("command", commandObj);
+//										requestObject.add("reporting", reportingObj);
+//										requestObject.addProperty("client_unique_id", clientUniqueId);
+//										
+//										receiveString = "";
+//										receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp, Integer.parseInt(clientPort), requestObject, reportsName, "");
+//										
+//										if (receiveString != null && !receiveString.equals("")) {
+////												System.out.println("receiveString ::: " + receiveString);
+//											
+//											jsonParser = new JsonParser();
+//											jsonObject = (JsonObject)jsonParser.parse(receiveString);
+//											status = jsonObject.get("status").getAsString();
+//											responseSecurekey = jsonObject.get("securekey").getAsString();
+//											message = jsonObject.get("message").getAsString();
+//											from = "[ SET REPORT VALUES ]";
+//											String data = "";
+//											
+//											if(status.equals("Y")) {
+//												data = jsonObject.get("response").getAsString();
+//												System.out.println("response string ::: " + data);
+												
+												//----------------------------------------------------------------------
+												
+												commandtype = "select";
+												datatype_fc = "BR";
+												datatype = "";
+												datatype_comment = "";
+												key = ld + "/" + ln + "." + reportsName;
+												value = "GET_BRCB_VALUES";
+												String[] valueArray = {};
+												
+												System.out.println("==========================================================================");
+												System.out.println("   key : " + key + " , value : " + value);
+												System.out.println("==========================================================================");
+												
+												// 소켓통신
+												receiveString = commons.socketConnection(ied_ip, Integer.parseInt(ied_port), clientIp,
+														Integer.parseInt(clientPort), commandtype, datatype, datatype_comment, datatype_fc, key,
+														value, clientUniqueId);
+												
+												if (receiveString != null && !receiveString.equals("")) {
+													
+													jsonParser = new JsonParser();
+													jsonObject = (JsonObject) jsonParser.parse(receiveString);
+													status = jsonObject.get("status").getAsString();
+													responseSecurekey = jsonObject.get("securekey").getAsString();
+													message = jsonObject.get("message").getAsString();
+													from = "[ getBRCBValues - " + key + " ]";
+													
+													System.out.println("message : " + message);
+													System.out.println("status : " + status);
+													
+													if (status.equals("Y")) {
+														
+														JsonObject jsonObject3 = jsonObject.get("response").getAsJsonObject();
+														String resValue = jsonObject3.get(key).getAsString();
+														
+														// {HVDC/LLN0$SPDCStat_brcb,false,TEMPLATE_IED_TEST/LLN0$HVDC_SPDC_Stat,1,0111111110,1000,160,010000,5000,false,false,9a5b13619e450a00,20210819014109.039Z}
+														// {GNDMUGLU01/LLN0.BR.SPDC_Status,false,GNDMUGLU01/LLN0$SPDC_Status,1,0111110110,0,0,010001,5000,false,false,18b8f36505000000,20240315025900.948Z}
+														System.out.println("resValue ---> " + resValue);
+														
+														String tempValue = resValue.replace("{", "");
+														tempValue = tempValue.replace("}", "");
+														valueArray = tempValue.split(",", -1);
+														int valueLength = valueArray.length;
+														System.out.println("resValue Length ---> " + valueLength);
+														
+														String reportId = valueArray[0];	// HVDC/LLN0$SPDCStat_brcb
+														String dataSet = valueArray[2]; 	// TEMPLATE_IED_TEST/LLN0$HVDC_SPDC_Stat
+														
+														System.out.println("reportId : " + reportId);
+														System.out.println("dataSet : " + dataSet);
+														
+														value = "BRCB_SET_ENA";
+														report_rcb_name = ld + "/" + ln + "." + datatype_fc + "." + reportsName;
+														report_rcb_receiver = ld + "/" + ln + "." + datatype_fc + "." + reportsName;
+														
+														System.out.println("==========================================================================");
+														System.out.println("   key : " + key + " , value : " + value);
+														System.out.println("==========================================================================");
+														
+//														clientUniqueId = commons.generateConnectionid("jgeosdushs");
+														
+														// request block
+														JsonObject requestObject2 = new JsonObject();
+														
+														// command block
+														JsonObject commandObj2 = new JsonObject();
+														commandObj2.addProperty("commandtype", "update");
+														commandObj2.addProperty("datatype_fc", "");
+														commandObj2.addProperty("datatype", "");
+														commandObj2.addProperty("datatype_comment", "");
+														commandObj2.addProperty("key", key);
+														commandObj2.addProperty("value", value);
+														
+														// reporting block
+														JsonObject reportingObj2 = new JsonObject();
+														reportingObj2.addProperty("report_dataset_name", dataSet.replace("$", "."));
+														reportingObj2.addProperty("report_rpt_id", reportId);
+														reportingObj2.addProperty("report_rcb_name", report_rcb_name);
+														reportingObj2.addProperty("report_rcb_receiver", report_rcb_receiver);
+														
+														reportingObj2.addProperty("report_setDataSetReference", dataSet);
+														reportingObj2.addProperty("report_setRptEna", "1");
+														reportingObj2.addProperty("report_setConfRev", "@@@@");
+														reportingObj2.addProperty("report_setDataSet", dataSet);
+														reportingObj2.addProperty("report_setBufTm", "@@@@");
+														reportingObj2.addProperty("report_setPurgeBuf", "@@@@");
+														reportingObj2.addProperty("report_setIntgPd", "@@@@");
+														reportingObj2.addProperty("report_setEntryID", "@@@@");
+														
+														reportingObj2.addProperty("report_optflds_bitsize", "@@@@");
+														reportingObj2.addProperty("report_optflds_sequence_number", "@@@@");
+														reportingObj2.addProperty("report_optflds_report_time_stamp", "@@@@");
+														reportingObj2.addProperty("report_optflds_reason_for_inclusion", "@@@@");
+														reportingObj2.addProperty("report_optflds_data_set_name", "@@@@");
+														reportingObj2.addProperty("report_optflds_data_reference", "@@@@");
+														reportingObj2.addProperty("report_optflds_buffer_overflow", "@@@@");
+														reportingObj2.addProperty("report_optflds_entryID", "@@@@");
+														reportingObj2.addProperty("report_optflds_conf_version", "@@@@");
+														reportingObj2.addProperty("report_optflds_segmnt", "@@@@");
+														
+														reportingObj2.addProperty("report_trgops_bitsize", "@@@@");
+														reportingObj2.addProperty("report_trgops_dchg", "@@@@");
+														reportingObj2.addProperty("report_trgops_dupd", "@@@@");
+														reportingObj2.addProperty("report_trgops_qchg", "@@@@");
+														reportingObj2.addProperty("report_trgops_intg", "@@@@");
+														reportingObj2.addProperty("report_trgops_gi", "@@@@");
+														
+														requestObject2.add("command", commandObj2);
+														requestObject2.add("reporting", reportingObj2);
+														requestObject2.addProperty("client_unique_id", clientUniqueId);
+														
+														receiveString = "";
+														receiveString = commons.socketConnection_report(ied_ip, Integer.parseInt(ied_port), clientIp, Integer.parseInt(clientPort), requestObject2, reportsName, "", eenameMap);
+													}
+												}
+												//----------------------------------------------------------------------
+//											}
+//										}
+									}
+								}
+							}
+						}
+						
+						
+						
 					} else {
-						System.out.println("associate message (" + reportsName + ")  : receiveString is empty");
+						System.out.println("associate message  : " + message);
 					}
+					
+				} else {
+					System.out.println("associate message  : receiveString is empty");
 				}
 			}
 			

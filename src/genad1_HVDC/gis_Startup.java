@@ -228,7 +228,7 @@ public class gis_Startup {
 							reportingObj.addProperty("report_trgops_dchg", "1"); // 제나드에서는 Data change 만 지원함
 							reportingObj.addProperty("report_trgops_dupd", "0");
 							reportingObj.addProperty("report_trgops_qchg", "0");
-							reportingObj.addProperty("report_trgops_intg", "0");
+							reportingObj.addProperty("report_trgops_intg", "0"); // 
 							reportingObj.addProperty("report_trgops_gi", "0");
 							
 							requestObject.add("command", commandObj);

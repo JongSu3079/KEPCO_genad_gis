@@ -68,8 +68,8 @@ public class Reports extends Thread {
 	private String clientIp = "";
 	private Integer clientPort = 0;
 	
-	private String filePathRoot = commonsStr.filePathRoot;
-	private String dataUploadDir = commonsStr.dataUploadDir;
+//	private String filePathRoot = commonsStr.filePathRoot;
+	private String kepcoHome = commonsStr.kepcoHome;
 	
 	public void setRptVar(RptVar rptVar) {
 		sharedRptVar = rptVar;
@@ -100,8 +100,8 @@ public class Reports extends Thread {
 			while (!stoptag) {
 				// System.out.println("alived!! isRecvFinish : " + sharedRptVar.isRecvFinish() + ", isMax : " + sharedRptVar.isMax());
 				if (sharedRptVar.isRecvFinish() && sharedRptVar.isEmptyQueue()) {
-					System.out.println("sharedRptVar.isRecvFinish() : " + sharedRptVar.isRecvFinish());
-					System.out.println("sharedRptVar.isEmptyQueue() : " + sharedRptVar.isEmptyQueue());
+					System.out.println("REPORT ( " + reportsName + " ) sharedRptVar.isRecvFinish() : " + sharedRptVar.isRecvFinish());
+					System.out.println("REPORT ( " + reportsName + " ) sharedRptVar.isEmptyQueue() : " + sharedRptVar.isEmptyQueue());
 					break;
 				}
 				if (skipAndQuit) {
@@ -111,7 +111,7 @@ public class Reports extends Thread {
 				if (sharedRptVar.isEmptyQueue()) {
 					if (sharedRptVar.isRecvFinish()) {
 						stoptag = true; 
-						System.out.println("[REPORT] stoptag = true");
+						System.out.println("[REPORT( " + reportsName + " )] stoptag = true");
 					}
 					continue; // ready for get
 				}
@@ -121,22 +121,11 @@ public class Reports extends Thread {
 				
 				// 실시간 데이터(RTTransF)가 아닌경우에만 로그기록
 //				if(finalMsg.contains("EvtTransF") || finalMsg.contains("HighResTransF") || finalMsg.contains("TrendTransF")) {
-					System.out.println("[REPORT] LinkedListQueue() Size : " + sharedRptVar.getCountReportsQueue());
-					System.out.println("[REPORT] ****************** finalMsg ::: " + finalMsg);
+					System.out.println("[REPORT( " + reportsName + " )] LinkedListQueue() Size : " + sharedRptVar.getCountReportsQueue());
+					System.out.println("[REPORT( " + reportsName + " )] ****************** finalMsg ::: " + finalMsg);
 //				}
 				
 				if (finalMsg.indexOf("IED_RESPONSE_OK") > -1) continue;
-				
-				// 이벤트 레포트가 포함되어 있을경우 Event 큐에 추가
-//				if (finalMsg.indexOf("EvtTransF") > -1) {
-//					int eventQueueCount = sharedRptVar.getCountEventQueue();
-//					System.out.println("[EVENT ADD] EventQueueCount : " + eventQueueCount);
-//					
-//					// 이벤트큐의 size가 10개 미만이면 저장
-//					if(eventQueueCount < 10) {
-//						sharedRptVar.addEventQueue(finalMsg);
-//					}
-//				}
 				
 				try {
 					
@@ -147,28 +136,36 @@ public class Reports extends Thread {
 					
 					// value, reason
 					JsonArray respValue = dataObj.get("value").getAsJsonArray();
-					JsonArray reasons = dataObj.get("reason for inclusion").getAsJsonArray();
+//					JsonArray reasons = dataObj.get("reason for inclusion").getAsJsonArray();
 					
 					JsonArray respDataRf = null;
 					if (dataObj.has("data-reference")) respDataRf = dataObj.get("data-reference").getAsJsonArray();
 					if (respDataRf != null) {
 						
 						for (int j = 0; j<respDataRf.size(); j++) {
-							// TEMPLATE_IED_TEST/SPDC1$ST$RTTransF
-							// TEMPLATE_IED_TEST/SPDC2$ST$EvtTransF
+							
+							// GNDMUGLU01/SCBR2$ST$EvtTransF
 							String tmpDataRf = respDataRf.get(j).getAsString();
-							String[] tmpRf2 = tmpDataRf.split("[$]"); // KEPCOALM/CINGGIO1, ST, Ind02, etc...
-							String firstStr = tmpRf2[0];	// TEMPLATE_IED_TEST/SPDC1
-							String fileLocation = firstStr.split("/")[1].toLowerCase(); // spdc1, spdc2
-							String fileType = tmpRf2[2];	// RTTransF, EvtTransF, HighResTransF, TrendTransF
+							String[] tmpRf2 = tmpDataRf.split("[$]"); // GNDMUGLU01/SCBR2, ST, EvtTransF
+							String firstStr = tmpRf2[0];	// GNDMUGLU01/SCBR2
+							String fileLocation = firstStr.split("/")[1].toLowerCase(); // scbr1, scbr2 ...
+							String fileType = tmpRf2[2];	// RTTransF, EvtTransF, TrendTransF
 							String datatype_comment = "";
 							
-							// 이벤트 레포트일 경우에 skip (Event 큐에서 파일 다운로드함)
-							// 실시간 레포트일 경우에 skip
-//							if(fileType.equals("EvtTransF") || fileType.equals("RTTransF")) {
-//							if(fileType.equals("EvtTransF")) {
-//								continue;
-//							}
+							System.out.println("----> 레포트 fileType : " + fileType);
+							
+							// 이벤트, 트렌드, 실시간 레포트가 아닐경우 skip
+							if(!fileType.equals("EvtTransF") && !fileType.equals("TrendTransF") && !fileType.equals("RTTransF")) {
+								continue;
+							}
+							
+							// EEName
+							// e.g) K_J9999_GLU101_CH01_CBOP_9999001
+							Map eenameMap = sharedRptVar.getEenameMap();
+							String eename = eenameMap.get(firstStr + ".EEName.location") != null ? (String)eenameMap.get(firstStr + ".EEName.location") : "";
+							System.out.println("----> eename : " + eename);
+							
+							String[] eenameArray = eename.split("_", -1);
 							
 							String tempValue = respValue.get(j).getAsString();
 							tempValue = tempValue.split(":::")[1];
@@ -179,72 +176,117 @@ public class Reports extends Thread {
 //							String dateTime = timeArray[0];
 							
 							// Unix타임 변환
-//							long unixTime = Long.parseLong(valueArray[0]);
-//							Date date = new Date(unixTime*1000L);
-//							SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-//							SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
+							long unixTime = Long.parseLong(valueArray[0]);
+							Date date = new Date(unixTime*1000L);
+							SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 //							sdf.setTimeZone(TimeZone.getTimeZone("GMT+9"));
-//							sdf2.setTimeZone(TimeZone.getTimeZone("GMT+9"));
-//							
-//							String dateTime = sdf.format(date);
-//							String dataTime_directory = sdf2.format(date);
-//							
-//							String fileName = "";
-//							if(fileLocation.equals("spdc1")) {
-//								fileName = "00";
-//								fileLocation = "spdc0";
-//								datatype_comment = "61338";
-//							} else {
-//								fileName = "01";
-//								fileLocation = "spdc1";
-//								datatype_comment = "61440";
-//							}
-//							
-//							// RTTransF:실시간파일, EvtTransF:이벤트파일, HighResTransF:250M파일, TrendTransF:트랜드파일
-//							if(fileType.equals("RTTransF")) {
-//								fileName += "_01_" + dateTime + ".dat";
-//							} else if(fileType.equals("EvtTransF")) {
-//								fileName += "_02_" + dateTime + ".dat";
-//							} else if(fileType.equals("HighResTransF")) {
-//								
-//								// Event파일과 250M파일의 이름을 동일하게 생성하기위해 사용
-//								event_datetime = sharedRptVar.getEvent_datetime();
-//								// 폴더
-//								dataTime_directory = event_datetime.substring(0, 8);
-//								
-//								// 로컬에 저장하기위해서 사용
-//								HighResTransF_filename = fileName + "_03_" + event_datetime + ".dat";
-//								// IED에서 가져오기위해서 사용
-//								fileName += "_03_" + dateTime + ".dat";
-//								
-//							} else {
-//								fileName += "_04_" + dateTime + ".dat";
-//							}
-////							System.out.println("fileName ::: " + fileName);
-//							
-//							String reasonStr = reasons.get(j).getAsString();
-//							String reason = reasonStr.split("[:]")[1];
+							
+							String dateTime = sdf.format(date);
+							
+							// K_J9999_GLU101_CH01_CBOP_9999001
+							// "G101_01\\EVENT\\2024\\03\\20\\K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat";
+							String fileFullPath = "";
+							String fileName = "";
+							
+							String thirdStr = eenameArray[2];
+							if(thirdStr.startsWith("GLU")) {
+								fileFullPath = "G" + thirdStr.replace("GLU", "");
+							} else if(thirdStr.startsWith("MLU")) {
+								fileFullPath = "M" + thirdStr.replace("MLU", "");
+							}
+							
+							fileFullPath += "_" + eenameArray[3].replace("CH", "");
+							
+							if(fileType.equals("EvtTransF")) {
+								fileFullPath += "\\EVENT";
+							} else if(fileType.equals("TrendTransF")) {
+								fileFullPath += "\\TREND";
+							} else if(fileType.equals("RTTransF")) {
+								fileFullPath += "\\REALTIME";
+							}
+							
+							fileFullPath += "\\" + dateTime.substring(0, 4) + "\\" + dateTime.substring(4, 6) + "\\" + dateTime.substring(6, 8);
+							
+							// CBOP SWPD BSHCUR TRDGA TCMOT TCPD TRPD
+							String sensorKind = eenameArray[4];
+							String sensorKind_num = "";
+							if(sensorKind.equals("CBOP")) {
+								if(fileType.equals("EvtTransF")) {
+									sensorKind_num = "22";
+								} else if(fileType.equals("TrendTransF")) {
+									sensorKind_num = "21";
+								} else if(fileType.equals("RTTransF")) {
+									sensorKind_num = "20";
+								}
+							} else if(sensorKind.equals("SWPD")) {
+								if(fileType.equals("EvtTransF")) {
+									sensorKind_num = "02";
+								} else if(fileType.equals("TrendTransF")) {
+									sensorKind_num = "01";
+								} else if(fileType.equals("RTTransF")) {
+									sensorKind_num = "00";
+								}
+							} else if(sensorKind.equals("BSHCUR")) {
+								if(fileType.equals("EvtTransF")) {
+									sensorKind_num = "52";
+								} else if(fileType.equals("TrendTransF")) {
+									sensorKind_num = "51";
+								} else if(fileType.equals("RTTransF")) {
+									sensorKind_num = "50";
+								}
+							} else if(sensorKind.equals("TRDGA")) {
+								if(fileType.equals("EvtTransF")) {
+									sensorKind_num = "32";
+								} else if(fileType.equals("TrendTransF")) {
+									sensorKind_num = "31";
+								} else if(fileType.equals("RTTransF")) {
+									sensorKind_num = "30";
+								}
+							} else if(sensorKind.equals("TCMOT")) {
+								if(fileType.equals("EvtTransF")) {
+									sensorKind_num = "42";
+								} else if(fileType.equals("TrendTransF")) {
+									sensorKind_num = "41";
+								} else if(fileType.equals("RTTransF")) {
+									sensorKind_num = "40";
+								}
+							} else if(sensorKind.equals("TCPD")) {
+								if(fileType.equals("EvtTransF")) {
+									sensorKind_num = "72";
+								} else if(fileType.equals("TrendTransF")) {
+									sensorKind_num = "71";
+								} else if(fileType.equals("RTTransF")) {
+									sensorKind_num = "70";
+								}
+							} else if(sensorKind.equals("TRPD")) {
+								if(fileType.equals("EvtTransF")) {
+									sensorKind_num = "12";
+								} else if(fileType.equals("TrendTransF")) {
+									sensorKind_num = "11";
+								} else if(fileType.equals("RTTransF")) {
+									sensorKind_num = "10";
+								}
+							}
+							
+							fileName += eename + "_" + sensorKind_num + "_" + dateTime + ".dat";
+							
+							System.out.println("fileFullPath ::: " + fileFullPath);
+							System.out.println("fileName ::: " + fileName);
 							
 							// 폴더 생성
-//							String uploadDir = dataUploadDir + "upload/" + iedIp + "/" + reportsName + "/" + fileLocation + "/";		//	/home/hvdcData/genad/upload/121.139.36.94/SPDCStat_brcb01/spdc0/
-//							String completeDir = dataUploadDir + "complete/" + iedIp + "/" + reportsName + "/" + fileLocation + "/";	//	/home/hvdcData/genad/complete/121.139.36.94/SPDCStat_brcb01/spdc0/
+							String fileFullPath_local = fileFullPath.replace("\\", "/");
+							String uploadDir = kepcoHome + "upload/" + fileFullPath_local + "/";
+							String completeDir = kepcoHome + "complete/" + fileFullPath_local + "/";
 //							
-							// 폴더 생성
-							// /home/hvdcData/pd/upload/121.139.36.94_102/RTTransF/20210827/
-//							String uploadDir = dataUploadDir + "upload/" + iedIp + "_" + iedPort + "/" + fileType + "/" + dataTime_directory + "/";	
-//							// /home/hvdcData/pd/complete/121.139.36.94_102/RTTransF/20210827/
-//							String completeDir = dataUploadDir + "complete/" + iedIp + "_" + iedPort + "/" + fileType + "/" + dataTime_directory + "/";
-//							
-//							File uploadDirFile = new File(uploadDir);
-//							File completeDirFile = new File(completeDir);
-//							
-//							if(!uploadDirFile.exists()) {
-//								uploadDirFile.mkdirs();
-//							}
-//							if(!completeDirFile.exists()) {
-//								completeDirFile.mkdirs();
-//							}
+							File uploadDirFile = new File(uploadDir);
+							File completeDirFile = new File(completeDir);
 							
+							if(!uploadDirFile.exists()) {
+								uploadDirFile.mkdirs();
+							}
+							if(!completeDirFile.exists()) {
+								completeDirFile.mkdirs();
+							}
 							
 							// request block
 							JsonObject requestObject = new JsonObject();
@@ -258,13 +300,9 @@ public class Reports extends Thread {
 							commandObj.addProperty("key", "");
 							commandObj.addProperty("value", "FILE_GET");
 							
-//							String fileName_fullpath = filePathRoot + fileLocation + "/" + fileName;
-							String fileName_fullpath = "C:\\MU\\G101_01\\EVENT\\2024\\03\\20\\K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat";
-							String uploadDir = "/home/KEPCO_iec61850/upload/gis/";
-							
 							// control block
 							JsonObject fileObj = new JsonObject();
-							fileObj.addProperty("filename", fileName_fullpath);	//	/mnt/ADC_Raw/spdc0/01_01_20210809082758.dat
+							fileObj.addProperty("filename", fileFullPath + "\\" + fileName); // G101_01\\EVENT\\2024\\03\\20\\K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
 							fileObj.addProperty("file_command", "DOWNLOAD"); 
 							fileObj.addProperty("file_size", "");
 							
@@ -273,7 +311,7 @@ public class Reports extends Thread {
 							requestObject.addProperty("client_unique_id", clientUniqueId);
 							
 							requestObject.addProperty("downloadPath", uploadDir);
-							String receiveString = commons.socketConnection(iedIp, iedPort, clientIp, clientPort, requestObject, reportsName, event_datetime);
+							String receiveString = commons.socketConnection_file_get(iedIp, iedPort, clientIp, clientPort, requestObject, reportsName, event_datetime);
 							
 							if (receiveString != null && !receiveString.equals("")) {
 //								System.out.println("receiveString ::: " + receiveString);
@@ -286,45 +324,10 @@ public class Reports extends Thread {
 								
 								if(status.equals("Y")) {
 									
-//									if(fileType.equals("HighResTransF")) {
-//										
-//										System.out.println("==========================================================================");
-//										System.out.println("   250M 파일 다운로드 ( " + fileLocation + " )");
-//										System.out.println("==========================================================================");
-//										
-//										if(fileLocation.equals("spdc0")) {
-//											HighResTransF_spdc1 = true;
-//										} else if(fileLocation.equals("spdc1")) {
-//											HighResTransF_spdc2 = true;
-//										}
-//										
-//										// spdc1, spdc2 모두 250M 파일을 다운로드 받으면 다음 Event 파일을 다운로드 받도록 true 입력
-//										if(HighResTransF_spdc1 == true && HighResTransF_spdc2 == true) {
-//											sharedRptVar.setIsAllowFileDownload(true);
-//											System.out.println("----- setIsAllowFileDownload : true (spdc1, spdc2 모두 250M 파일을 다운로드 받음)");
-//											HighResTransF_spdc1 = false;
-//											HighResTransF_spdc2 = false;
-//										}
-//										
-//										// 250M 파일일 경우에 이름변경
-//										fileName = HighResTransF_filename;
-//									}
-									
-									// 실시간 파일인 경우 ( 실시간 파일은 5초간격으로 파일을 합친 후 complete 폴더로 이동 )
-//									if(fileType.equals("RTTransF")) {
-//										
-//										// 바로전 5초 파일들을 묶기 ( 0~4  or  5~9 )
-//										Runtime runtime = Runtime.getRuntime();
-//										// ex) /home/HVDC_iec61850/RealTime_SumFile.sh /home/HVDC_iec61850/hvdcData/pd/ 1.241.156.210_102 20211201 00_01_20211201154958.dat
-//										String command = commonsStr.RealTime_SumFile + " " + dataUploadDir + " " + iedIp + "_" + iedPort + " " + dataTime_directory + " " + fileName;
-//										Process process = runtime.exec(command);
-//										
-//									} else {
-										// 파일 이동
-//										File uploadFile = new File(uploadDir + fileName);		//	/home/hvdcData/pd/upload/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
-//										File completeFile = new File(completeDir + fileName);	//	/home/hvdcData/pd/complete/121.139.36.94_102/RTTransF/20210827/01_01_20210809082758.dat
-//										uploadFile.renameTo(completeFile);
-//									}
+									// 파일 이동
+									File uploadFile = new File(uploadDir + fileName);		//	/home/KEPCO_iec61850/upload/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+									File completeFile = new File(completeDir + fileName);	//	/home/KEPCO_iec61850/complete/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+									uploadFile.renameTo(completeFile);
 									
 								} else {
 									System.out.println("FILE_GET message (" + reportsName + ")  : " + message);
