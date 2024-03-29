@@ -1,6 +1,8 @@
 package genad1_HVDC.utils;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -288,53 +290,76 @@ public class Reports extends Thread {
 								completeDirFile.mkdirs();
 							}
 							
-							// request block
-							JsonObject requestObject = new JsonObject();
-							
-							// command block
-							JsonObject commandObj = new JsonObject();
-							commandObj.addProperty("commandtype", "select"); 
-							commandObj.addProperty("datatype_fc", ""); 
-							commandObj.addProperty("datatype", "");
-							commandObj.addProperty("datatype_comment", ""); 
-							commandObj.addProperty("key", "");
-							commandObj.addProperty("value", "FILE_GET");
-							
-							// control block
-							JsonObject fileObj = new JsonObject();
-							fileObj.addProperty("filename", fileFullPath + "\\" + fileName); // G101_01\\EVENT\\2024\\03\\20\\K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
-							fileObj.addProperty("file_command", "DOWNLOAD"); 
-							fileObj.addProperty("file_size", "");
-							
-							requestObject.add("command", commandObj);
-							requestObject.add("file_control", fileObj);
-							requestObject.addProperty("client_unique_id", clientUniqueId);
-							
-							requestObject.addProperty("downloadPath", uploadDir);
-							String receiveString = commons.socketConnection_file_get(iedIp, iedPort, clientIp, clientPort, requestObject, reportsName, event_datetime);
-							
-							if (receiveString != null && !receiveString.equals("")) {
+							//=======================================================================
+							//   FILE_GET을 이용하지않고 value값으로 파일 생성
+							//   SBSH (MLU 부싱 진단장치), SIML (MLU 유중가스 분석장치_DGA)
+							//=======================================================================
+							if(fileLocation.contains("sbsh") || fileLocation.contains("siml")) {
+								
+								// 파일 생성
+								FileWriter fileWriter = new FileWriter(uploadDir + fileName);	//	/home/KEPCO_iec61850/upload/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+								PrintWriter printWriter = new PrintWriter(fileWriter);
+								printWriter.println(tempValue);
+								printWriter.close();
+								
+								// 파일 이동
+								File uploadFile = new File(uploadDir + fileName);		//	/home/KEPCO_iec61850/upload/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+								File completeFile = new File(completeDir + fileName);	//	/home/KEPCO_iec61850/complete/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+								uploadFile.renameTo(completeFile);
+							} 
+							//=======================================================================
+							//   FILE_GET을 이용해 파일 생성
+							//=======================================================================
+							else {
+								
+								// request block
+								JsonObject requestObject = new JsonObject();
+								
+								// command block
+								JsonObject commandObj = new JsonObject();
+								commandObj.addProperty("commandtype", "select"); 
+								commandObj.addProperty("datatype_fc", ""); 
+								commandObj.addProperty("datatype", "");
+								commandObj.addProperty("datatype_comment", ""); 
+								commandObj.addProperty("key", "");
+								commandObj.addProperty("value", "FILE_GET");
+								
+								// control block
+								JsonObject fileObj = new JsonObject();
+								fileObj.addProperty("filename", fileFullPath + "\\" + fileName); // G101_01\\EVENT\\2024\\03\\20\\K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+								fileObj.addProperty("file_command", "DOWNLOAD"); 
+								fileObj.addProperty("file_size", "");
+								
+								requestObject.add("command", commandObj);
+								requestObject.add("file_control", fileObj);
+								requestObject.addProperty("client_unique_id", clientUniqueId);
+								
+								requestObject.addProperty("downloadPath", uploadDir);
+								String receiveString = commons.socketConnection_file_get(iedIp, iedPort, clientIp, clientPort, requestObject, reportsName, event_datetime);
+								
+								if (receiveString != null && !receiveString.equals("")) {
 //								System.out.println("receiveString ::: " + receiveString);
-								
-								jsonParser = new JsonParser();
-								jsonObject = (JsonObject)jsonParser.parse(receiveString);
-								String status = jsonObject.get("status").getAsString();
-								// String responseSecurekey = jsonObject.get("securekey").getAsString();
-								String message = jsonObject.get("message").getAsString();
-								
-								if(status.equals("Y")) {
 									
-									// 파일 이동
-									File uploadFile = new File(uploadDir + fileName);		//	/home/KEPCO_iec61850/upload/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
-									File completeFile = new File(completeDir + fileName);	//	/home/KEPCO_iec61850/complete/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
-									uploadFile.renameTo(completeFile);
+									jsonParser = new JsonParser();
+									jsonObject = (JsonObject)jsonParser.parse(receiveString);
+									String status = jsonObject.get("status").getAsString();
+									// String responseSecurekey = jsonObject.get("securekey").getAsString();
+									String message = jsonObject.get("message").getAsString();
+									
+									if(status.equals("Y")) {
+										
+										// 파일 이동
+										File uploadFile = new File(uploadDir + fileName);		//	/home/KEPCO_iec61850/upload/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+										File completeFile = new File(completeDir + fileName);	//	/home/KEPCO_iec61850/complete/G101_01/EVENT/2024/03/20/K_J9999_GLU101_CH01_CBOP_9999001_22_20240320143400.dat
+										uploadFile.renameTo(completeFile);
+										
+									} else {
+										System.out.println("FILE_GET message (" + reportsName + ")  : " + message);
+									}
 									
 								} else {
-									System.out.println("FILE_GET message (" + reportsName + ")  : " + message);
+									System.out.println("FILE_GET message (" + reportsName + ")  : receiveString is empty");
 								}
-								
-							} else {
-								System.out.println("FILE_GET message (" + reportsName + ")  : receiveString is empty");
 							}
 						}
 					}

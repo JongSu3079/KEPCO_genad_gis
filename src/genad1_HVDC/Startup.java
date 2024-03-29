@@ -101,13 +101,13 @@ public class Startup {
 				
 				Map eenameMap = new HashMap();
 				
-				// e.g) 192.168.10.101,102,03,GNDMUGLU01
-				//      IED_ip, IED_port, report_name_postfix, logical_device??
+				// e.g) 192.168.10.101,102,rcb_SCBR_Diagnostic01,GNDMUGLU01
+				//      IED_ip, IED_port, report_name, logical_device??
 				String[] iedArray = readLine.split(",");
 				String ied_ip = iedArray[0];
 				String ied_port = iedArray[1];
 //				String[] reportsArray = iedArray[2].split(":");
-				String postfix = iedArray[2];
+				String reportsName_file = iedArray[2];
 				String ld = iedArray[3];
 				
 //				Thread.sleep(2000);
@@ -117,7 +117,7 @@ public class Startup {
 				System.out.println("==============[ IED Server 연결  ]===========================");
 				System.out.println("   IED ip : " + ied_ip);
 				System.out.println("   IED port : " + ied_port);
-				System.out.println("   Report Name postfix : " + postfix);
+				System.out.println("   Report Name (Config file) : " + reportsName_file);
 				System.out.println("   LD : " + ld);
 				System.out.println("===========================================================");
 				
@@ -298,8 +298,8 @@ public class Startup {
 //										reportsName = "rcb_SCBR_Diagnostic01";
 									String reportsName = jsonArray.get(k).getAsString();
 									
-									// posotfix로 끝나는 reportsName
-									if(reportsName.endsWith(postfix)) {
+									// ied 서버에서 전달받은 reportsName과 Config파일의 reportsName이 같다면
+									if(reportsName.equals(reportsName_file)) {
 										
 										String report_rcb_name = "";
 										String report_rcb_receiver = "";
