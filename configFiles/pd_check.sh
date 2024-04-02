@@ -5,7 +5,7 @@ DATE_TIME=$(date +"%Y-%m-%d %T")
 # 192.168.192.50
 CLIENT_IP="127.0.0.1"
 
-# 8201, 8202, 8203
+# 8201, 8202
 CLIENT_PORT=$1
 
 # pd_stat_ied.txt (1.241.156.210,102,SPDCStat_brcb01)

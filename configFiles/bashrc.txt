@@ -1,0 +1,30 @@
+
+# KEPCO Log
+alias kp='ps -ef | grep -E "iec61850_client_server|KEPCO_tnm_genad.jar" | grep -v grep'
+alias kes='nohup /usr/bin/java -jar /home/KEPCO_iec61850/KEPCO_tnm_genad.jar "127.0.0.1" "8101" start_client_61851.sh "glu_ied_rcb_SCBR_Diagnostic.txt" 1>> /home/KEPCO_iec61850/logs/glu/java/glu_8101.log 2>&1 &'
+
+# GLU
+alias g1l='tail -500f /home/KEPCO_iec61850/logs/glu/java/glu_8101.log'
+alias g2l='tail -500f /home/KEPCO_iec61850/logs/glu/java/glu_8102.log'
+alias g3l='tail -500f /home/KEPCO_iec61850/logs/glu/java/glu_8103.log'
+alias g4l='tail -500f /home/KEPCO_iec61850/logs/glu/java/glu_8104.log'
+alias g5l='tail -500f /home/KEPCO_iec61850/logs/glu/java/glu_8105.log'
+alias g6l='tail -500f /home/KEPCO_iec61850/logs/glu/java/glu_8106.log'
+alias g7l='tail -500f /home/KEPCO_iec61850/logs/glu/java/glu_8107.log'
+
+# MLU
+alias m1l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8201.log'
+alias m2l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8202.log'
+alias m3l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8203.log'
+alias m4l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8204.log'
+alias m5l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8205.log'
+alias m6l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8206.log'
+alias m7l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8207.log'
+alias m8l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8208.log'
+alias m9l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8209.log'
+alias m10l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8210.log'
+alias m11l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8211.log'
+alias m12l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8212.log'
+alias m13l='tail -500f /home/KEPCO_iec61850/logs/mlu/java/mlu_8213.log'
+
+

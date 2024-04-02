@@ -1,29 +1,61 @@
 # mmc run
-# 0 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 192.168.192.50 8104 start_mmc_61850.sh mmc_tempCurr_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_tempCurr.log 2>&1
-*/15 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 192.168.192.50 8104 start_mmc_61850.sh mmc_tempCurr_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_tempCurr.log 2>&1
-*/15 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 192.168.192.50 8103 start_mmc_61850.sh mmc_capacitance_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_capacitance.log 2>&1
+# */15 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 127.0.0.1 8104 start_mmc_61850.sh mmc_tempCurr_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_tempCurr.log 2>&1
+# */15 * * * * /usr/bin/java -jar /home/HVDC_iec61850/jpy_HVDC.jar 127.0.0.1 8103 start_mmc_61850.sh mmc_capacitance_ied.txt 1>> /home/HVDC_iec61850/logs/mmc/java/mmc_capacitance.log 2>&1
 
 # pd process check
-* * * * * /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
-* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
-* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8201 pd_stat_ied1.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
 
-* * * * * /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
-* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
-* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8202 pd_stat_ied2.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
 
-* * * * * /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
-* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
-* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * sleep 20; /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+#* * * * * sleep 40; /home/HVDC_iec61850/pd_check.sh 8203 pd_stat_ied3.txt >> /home/HVDC_iec61850/logs/pd/processCheck/pd_check.log 2>&1
+
 
 # logrotate 강제실행(매일 23시59분30초에)
-59 23 * * * sleep 30; /usr/sbin/logrotate -f /etc/logrotate.conf
+# 59 23 * * * sleep 30; /usr/sbin/logrotate -f /etc/logrotate.conf
+
 
 # pd create
-*/15 * * * * /usr/bin/bash /home/HVDC_iec61850/pdCreate.sh
+# */5 * * * * /usr/bin/bash /home/HVDC_iec61850/pdCreate.sh
 
 # mmc create
-*/15 * * * * /usr/bin/bash /home/HVDC_iec61850/mmcCreate.sh
+# */15 * * * * /usr/bin/bash /home/HVDC_iec61850/mmcCreate.sh
 
 # pd realtime create
-*/1 * * * * /usr/bin/bash /home/HVDC_iec61850/pdRealtimeCreate.sh 5
+# */1 * * * * /usr/bin/bash /home/HVDC_iec61850/pdRealtimeCreate.sh 5
+
+#sj server test
+#*/15 * * * * /usr/bin/bash /home/sj_test/test2.sh
+
+
+# GLU
+* * * * * /home/KEPCO_iec61850/process_check.sh 8101 glu_ied_rcb_SCBR_Diagnostic.txt glu >> /home/KEPCO_iec61850/logs/glu/processCheck/glu_8101.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8102 glu_ied_rcb_SCBR_Measurand.txt glu >> /home/KEPCO_iec61850/logs/glu/processCheck/glu_8102.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8103 glu_ied_rcb_SCBR_Status.txt glu >> /home/KEPCO_iec61850/logs/glu/processCheck/glu_8103.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8104 glu_ied_rcb_SPDC_Diagnostic.txt glu >> /home/KEPCO_iec61850/logs/glu/processCheck/glu_8104.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8105 glu_ied_rcb_SPDC_Measurand.txt glu >> /home/KEPCO_iec61850/logs/glu/processCheck/glu_8105.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8106 glu_ied_rcb_SPDC_SettingValues.txt glu >> /home/KEPCO_iec61850/logs/glu/processCheck/glu_8106.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8107 glu_ied_rcb_SPDC_Status.txt glu >> /home/KEPCO_iec61850/logs/glu/processCheck/glu_8107.log 2>&1
+
+# MLU
+* * * * * /home/KEPCO_iec61850/process_check.sh 8201 mlu_ied_rcb_SBSH_Measurand.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8201.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8202 mlu_ied_rcb_SBSH_SettingValues.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8202.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8203 mlu_ied_rcb_SBSH_Status.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8203.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8204 mlu_ied_rcb_SIML_Diagnostic.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8204.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8205 mlu_ied_rcb_SIML_Measurand.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8205.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8206 mlu_ied_rcb_SIML_Status.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8206.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8207 mlu_ied_rcb_SLTC_Diagnostic.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8207.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8208 mlu_ied_rcb_SLTC_Measurand.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8208.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8209 mlu_ied_rcb_SLTC_Status.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8209.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8210 mlu_ied_rcb_SPDC_Diagnostic.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8210.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8211 mlu_ied_rcb_SPDC_Measurand.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8211.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8212 mlu_ied_rcb_SPDC_SettingValues.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8212.log 2>&1
+* * * * * /home/KEPCO_iec61850/process_check.sh 8213 mlu_ied_rcb_SPDC_Status.txt mlu >> /home/KEPCO_iec61850/logs/mlu/processCheck/mlu_8213.log 2>&1
+
+
+
